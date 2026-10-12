@@ -1,0 +1,751 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="description" content="Musify - Premium, ad-free music streaming directly from your Google Drive">
+  <meta name="theme-color" content="#121212">
+  <title>Musify — Your Personal Music Cloud</title>
+  
+  <link rel="stylesheet" href="styles.css">
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><circle cx='12' cy='12' r='10' fill='%231DB954'/><path d='M7 9.5c3.5-1 7-0.7 10 1.2M7.5 12.3c2.8-0.8 5.7-0.5 8.1 1M8 15.1c2.2-0.6 4.4-0.4 6.3 0.8' stroke='%23121212' stroke-width='1.8' stroke-linecap='round' fill='none'/></svg>">
+  
+  <!-- jsmediatags CDN for reading ID3 audio tags and album art directly from files -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jsmediatags/3.9.5/jsmediatags.min.js"></script>
+</head>
+<body>
+  <!-- App Container -->
+  <div class="app-layout">
+
+    <!-- DESKTOP SIDEBAR -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-logo">
+        <svg class="logo-icon" viewBox="0 0 24 24" fill="currentColor" width="32" height="32">
+          <circle cx="12" cy="12" r="10" fill="#1DB954"/>
+          <path d="M7 9.5c3.5-1 7-0.7 10 1.2M7.5 12.3c2.8-0.8 5.7-0.5 8.1 1M8 15.1c2.2-0.6 4.4-0.4 6.3 0.8" 
+                stroke="#121212" stroke-width="1.8" stroke-linecap="round" fill="none"/>
+        </svg>
+        <span class="logo-text">Musify</span>
+      </div>
+
+      <nav class="sidebar-nav">
+        <button class="nav-item active" data-view="home" id="navHome">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor">
+            <path d="M12.5 3.247a1 1 0 0 0-1 0L4 7.577V20h5v-6a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v6h5V7.577l-7.5-4.33z"/>
+          </svg>
+          <span>Home</span>
+        </button>
+
+        <button class="nav-item" data-view="search" id="navSearch">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor">
+            <path d="M10.5 3a7.5 7.5 0 0 1 5.645 12.438l4.709 4.708a1 1 0 0 1-1.414 1.415l-4.708-4.709A7.5 7.5 0 1 1 10.5 3zm0 2a5.5 5.5 0 1 0 0 11 5.5 5.5 0 0 0 0-11z"/>
+          </svg>
+          <span>Search</span>
+        </button>
+
+        <button class="nav-item" data-view="library" id="navLibrary">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor">
+            <path d="M3 22a1 1 0 0 1-1-1V3a1 1 0 0 1 2 0v18a1 1 0 0 1-1 1zM15.5 2.134A1 1 0 0 0 14 3v18a1 1 0 0 0 1.5.866l6-3.464A1 1 0 0 0 22 17.536V4.464a1 1 0 0 0-.5-.866l-6-3.464zM8 3a1 1 0 0 0-1 1v16a1 1 0 0 0 2 0V4a1 1 0 0 0-1-1z"/>
+          </svg>
+          <span>Your Library</span>
+        </button>
+      </nav>
+
+      <div class="sidebar-divider"></div>
+
+      <div class="sidebar-actions">
+        <button class="sidebar-action-btn" id="btnCreatePlaylist">
+          <div class="action-icon-box create-icon">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+              <path d="M11 11V5h2v6h6v2h-6v6h-2v-6H5v-2h6z"/>
+            </svg>
+          </div>
+          <span>Create Playlist</span>
+        </button>
+
+        <button class="sidebar-action-btn" id="btnLikedSongsShortcut" data-view="liked">
+          <div class="action-icon-box liked-icon">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
+              <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+            </svg>
+          </div>
+          <span>Liked Songs</span>
+        </button>
+      </div>
+
+      <div class="sidebar-playlists-container">
+        <div class="sidebar-playlists-header">
+          <span>PLAYLISTS</span>
+        </div>
+        <ul class="sidebar-playlists-list" id="sidebarPlaylistList">
+          <!-- Dynamically populated or skeleton loader -->
+        </ul>
+      </div>
+
+      <!-- Google Drive connection status pill -->
+      <div class="drive-status-card" id="sidebarDriveStatus">
+        <div class="drive-status-header">
+          <div class="status-dot disconnected" id="driveStatusDot"></div>
+          <span class="status-label" id="driveStatusLabel">Google Drive Offline</span>
+        </div>
+        <button class="btn-drive-connect" id="btnConnectDrive">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+            <path d="M7.71 3.5L1.15 15l3.43 6 6.55-11.5L7.71 3.5zm4.86 8.5l3.43 6H22.85l-3.42-6H12.57zm7.43-1.5L16.58 3.5H9.72l3.42 6.5 6.86.5z"/>
+          </svg>
+          <span id="btnConnectDriveText">Connect Drive</span>
+        </button>
+      </div>
+    </aside>
+
+    <!-- MAIN VIEW AREA -->
+    <div class="main-wrapper">
+      <!-- TOP BAR -->
+      <header class="topbar" id="topbar">
+        <div class="topbar-nav-buttons">
+          <button class="nav-circle-btn" id="btnHistoryBack" aria-label="Go back">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
+              <path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/>
+            </svg>
+          </button>
+          <button class="nav-circle-btn" id="btnHistoryForward" aria-label="Go forward">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
+              <path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/>
+            </svg>
+          </button>
+        </div>
+
+        <!-- Search Bar in Topbar (Visible on Search view or desktop) -->
+        <div class="topbar-search" id="topbarSearchContainer">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="#B3B3B3">
+            <path d="M10.5 3a7.5 7.5 0 0 1 5.645 12.438l4.709 4.708a1 1 0 0 1-1.414 1.415l-4.708-4.709A7.5 7.5 0 1 1 10.5 3zm0 2a5.5 5.5 0 1 0 0 11 5.5 5.5 0 0 0 0-11z"/>
+          </svg>
+          <input type="text" id="globalSearchInput" placeholder="What do you want to play?" autocomplete="off" spellcheck="false">
+          <button class="search-clear-btn hidden" id="btnClearSearch" aria-label="Clear search">✕</button>
+        </div>
+
+        <div class="topbar-actions">
+          <!-- DEV-ONLY Toggle Badge -->
+          <button class="dev-toggle-badge" id="btnDevToggle" title="Click to toggle DEV-ONLY test songs preview">
+            <span class="badge-dot"></span>
+            <span class="badge-text" id="devToggleText">DEV-PREVIEW: ON</span>
+          </button>
+
+          <!-- Settings / Folder button -->
+          <button class="topbar-btn" id="btnSettings" title="Drive Settings & Sync">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+              <path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58a.49.49 0 0 0 .12-.61l-1.92-3.32a.49.49 0 0 0-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54a.48.48 0 0 0-.48-.41h-3.84c-.24 0-.44.17-.48.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.07.63-.07.94s.02.64.07.94l-2.03 1.58a.49.49 0 0 0-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.48-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/>
+            </svg>
+          </button>
+        </div>
+      </header>
+
+      <!-- SCROLLABLE CONTENT CONTAINER -->
+      <main class="main-content" id="mainContent">
+        <!-- Dynamic Gradient Backdrop -->
+        <div class="dynamic-gradient-bg" id="dynamicGradient"></div>
+
+        <!-- 1. HOME VIEW -->
+        <section class="view-panel active" id="viewHome">
+          <div class="view-header">
+            <h1 class="greeting-heading" id="greetingHeading">Good evening</h1>
+          </div>
+
+          <!-- Quick access grid (top 6 recently played or top playlists) -->
+          <div class="quick-picks-grid" id="quickPicksGrid">
+            <!-- Dynamically populated -->
+          </div>
+
+          <!-- Section: Recently Played -->
+          <div class="content-section">
+            <div class="section-header">
+              <h2>Recently Played</h2>
+              <button class="see-all-btn" data-view="library" data-tab="recents">See all</button>
+            </div>
+            <div class="cards-carousel" id="homeRecentsCards">
+              <!-- Dynamically populated cards -->
+            </div>
+          </div>
+
+          <!-- Section: Your Playlists -->
+          <div class="content-section">
+            <div class="section-header">
+              <h2>Your Playlists</h2>
+              <button class="see-all-btn" data-view="library" data-tab="playlists">See all</button>
+            </div>
+            <div class="cards-carousel" id="homePlaylistsCards">
+              <!-- Dynamically populated cards -->
+            </div>
+          </div>
+        </section>
+
+        <!-- 2. SEARCH VIEW -->
+        <section class="view-panel" id="viewSearch">
+          <div class="search-hero">
+            <h1>Browse & Search</h1>
+            <div class="search-filter-pills" id="searchFilterPills">
+              <button class="filter-pill active" data-filter="all">All</button>
+              <button class="filter-pill" data-filter="tracks">Songs</button>
+              <button class="filter-pill" data-filter="artists">Artists</button>
+              <button class="filter-pill" data-filter="albums">Albums</button>
+            </div>
+          </div>
+
+          <div class="search-results-container" id="searchResultsContainer">
+            <!-- Search Results or Browse Categories -->
+            <div class="search-empty-state" id="searchEmptyPrompt">
+              <svg viewBox="0 0 24 24" width="64" height="64" fill="#535353">
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/>
+              </svg>
+              <h3>Play what you love</h3>
+              <p>Search for songs, artists, or albums from your connected Google Drive folder.</p>
+            </div>
+
+            <div class="search-results-list hidden" id="searchResultsList">
+              <div class="tracklist-table-header">
+                <span class="col-index">#</span>
+                <span class="col-title">Title</span>
+                <span class="col-album">Album</span>
+                <span class="col-duration">Duration</span>
+                <span class="col-actions"></span>
+              </div>
+              <div class="tracklist-rows" id="searchResultsRows"></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- 3. LIBRARY VIEW -->
+        <section class="view-panel" id="viewLibrary">
+          <div class="library-header">
+            <h1>Your Library</h1>
+            <div class="library-tabs">
+              <button class="library-tab-btn active" data-tab="all">All Songs</button>
+              <button class="library-tab-btn" data-tab="playlists">Playlists</button>
+              <button class="library-tab-btn" data-tab="liked">Liked Songs</button>
+              <button class="library-tab-btn" data-tab="recents">Recently Played</button>
+            </div>
+          </div>
+
+          <div class="library-toolbar">
+            <div class="library-search-inline">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="#B3B3B3">
+                <path d="M10.5 3a7.5 7.5 0 0 1 5.645 12.438l4.709 4.708a1 1 0 0 1-1.414 1.415l-4.708-4.709A7.5 7.5 0 1 1 10.5 3zm0 2a5.5 5.5 0 1 0 0 11 5.5 5.5 0 0 0 0-11z"/>
+              </svg>
+              <input type="text" id="libraryFilterInput" placeholder="Filter in library...">
+            </div>
+            <div class="library-sort">
+              <label for="librarySortSelect">Sort by:</label>
+              <select id="librarySortSelect">
+                <option value="recent">Recently Added</option>
+                <option value="title">Title (A-Z)</option>
+                <option value="artist">Artist</option>
+                <option value="duration">Duration</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="library-content" id="libraryContentArea">
+            <!-- Dynamic content: cards grid or track list -->
+          </div>
+        </section>
+
+        <!-- 4. PLAYLIST / ALBUM DETAIL VIEW -->
+        <section class="view-panel" id="viewPlaylistDetail">
+          <div class="playlist-detail-header" id="playlistHero">
+            <div class="playlist-cover-art-large" id="playlistDetailCover">
+              <div class="art-placeholder-gradient">
+                <svg viewBox="0 0 24 24" width="60" height="60" fill="currentColor">
+                  <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/>
+                </svg>
+              </div>
+            </div>
+            <div class="playlist-meta">
+              <span class="playlist-type" id="playlistDetailType">PLAYLIST</span>
+              <h1 class="playlist-title" id="playlistDetailTitle">My Playlist</h1>
+              <p class="playlist-description" id="playlistDetailDescription">Curated from your Google Drive library</p>
+              <div class="playlist-stats">
+                <span id="playlistDetailOwner">Musify</span> • 
+                <span id="playlistDetailSongCount">0 songs</span>, 
+                <span id="playlistDetailDuration">0 min</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="playlist-action-bar">
+            <button class="btn-hero-play" id="btnPlaylistPlayAll" aria-label="Play all">
+              <svg viewBox="0 0 24 24" width="26" height="26" fill="#000000">
+                <path d="M8 5v14l11-7z"/>
+              </svg>
+            </button>
+            <button class="btn-hero-shuffle" id="btnPlaylistShuffleAll" aria-label="Shuffle play" title="Shuffle play">
+              <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor">
+                <path d="M10.59 9.17L5.41 4 4 5.41l5.17 5.17 1.42-1.41zM14.5 4l2.04 2.04L4 18.59 5.41 20 17.96 7.46 20 9.5V4h-5.5zm.33 9.41l-1.41 1.41 3.13 3.13L14.5 20H20v-5.5l-2.04 2.04-3.13-3.13z"/>
+              </svg>
+            </button>
+            <button class="btn-icon-secondary" id="btnPlaylistRename" title="Rename playlist">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+                <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34a.9959.9959 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
+              </svg>
+            </button>
+            <button class="btn-icon-secondary" id="btnPlaylistDelete" title="Delete playlist">
+              <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+                <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
+              </svg>
+            </button>
+          </div>
+
+          <div class="tracklist-container">
+            <div class="tracklist-table-header">
+              <span class="col-index">#</span>
+              <span class="col-title">Title</span>
+              <span class="col-album">Album</span>
+              <span class="col-duration">Duration</span>
+              <span class="col-actions"></span>
+            </div>
+            <div class="tracklist-rows" id="playlistTracksRows">
+              <!-- Dynamically populated -->
+            </div>
+          </div>
+        </section>
+
+        <!-- 5. LIKED SONGS VIEW -->
+        <section class="view-panel" id="viewLikedSongs">
+          <div class="playlist-detail-header liked-hero">
+            <div class="playlist-cover-art-large liked-cover">
+              <svg viewBox="0 0 24 24" width="64" height="64" fill="#FFFFFF">
+                <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+              </svg>
+            </div>
+            <div class="playlist-meta">
+              <span class="playlist-type">PLAYLIST</span>
+              <h1 class="playlist-title">Liked Songs</h1>
+              <div class="playlist-stats">
+                <span>Your Favorites</span> • 
+                <span id="likedSongsCount">0 songs</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="playlist-action-bar">
+            <button class="btn-hero-play" id="btnLikedPlayAll" aria-label="Play all liked songs">
+              <svg viewBox="0 0 24 24" width="26" height="26" fill="#000000">
+                <path d="M8 5v14l11-7z"/>
+              </svg>
+            </button>
+          </div>
+
+          <div class="tracklist-container">
+            <div class="tracklist-table-header">
+              <span class="col-index">#</span>
+              <span class="col-title">Title</span>
+              <span class="col-album">Album</span>
+              <span class="col-duration">Duration</span>
+              <span class="col-actions"></span>
+            </div>
+            <div class="tracklist-rows" id="likedTracksRows"></div>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <!-- QUEUE DRAWER (SLIDE OVER) -->
+    <aside class="queue-drawer" id="queueDrawer" aria-hidden="true">
+      <div class="queue-header">
+        <h3>Play Queue</h3>
+        <button class="btn-close-queue" id="btnCloseQueue" aria-label="Close queue">✕</button>
+      </div>
+      <div class="queue-body">
+        <div class="queue-section">
+          <h4>Now Playing</h4>
+          <div class="queue-current-track" id="queueNowPlayingItem">
+            <span class="queue-empty-text">No track playing</span>
+          </div>
+        </div>
+
+        <div class="queue-section">
+          <div class="queue-section-header">
+            <h4>Next Up</h4>
+            <button class="btn-clear-queue" id="btnClearQueue">Clear</button>
+          </div>
+          <div class="queue-list" id="queueItemsList">
+            <span class="queue-empty-text">Queue is empty</span>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- DESKTOP BOTTOM PLAYER BAR -->
+    <footer class="player-bar" id="playerBar">
+      <!-- Left: Track info -->
+      <div class="player-track-info">
+        <div class="player-cover-box" id="playerCoverBox">
+          <div class="cover-fallback" id="playerCoverFallback">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="#B3B3B3">
+              <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/>
+            </svg>
+          </div>
+          <img src="" alt="Album Art" id="playerCoverImg" class="player-cover-img hidden">
+        </div>
+        <div class="player-track-text">
+          <div class="player-track-title" id="playerTrackTitle">No song selected</div>
+          <div class="player-track-artist" id="playerTrackArtist">Connect Google Drive</div>
+        </div>
+        <button class="btn-track-like" id="playerBtnLike" aria-label="Like song" title="Save to Liked Songs">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" class="heart-icon">
+            <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Center: Controls and Seek Bar -->
+      <div class="player-controls-container">
+        <div class="player-buttons-row">
+          <!-- Shuffle -->
+          <button class="player-btn control-secondary" id="btnShuffle" title="Enable Shuffle" aria-label="Shuffle">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
+              <path d="M10.59 9.17L5.41 4 4 5.41l5.17 5.17 1.42-1.41zM14.5 4l2.04 2.04L4 18.59 5.41 20 17.96 7.46 20 9.5V4h-5.5zm.33 9.41l-1.41 1.41 3.13 3.13L14.5 20H20v-5.5l-2.04 2.04-3.13-3.13z"/>
+            </svg>
+            <span class="control-indicator-dot"></span>
+          </button>
+
+          <!-- Previous -->
+          <button class="player-btn control-skip" id="btnPrev" title="Previous Song" aria-label="Previous">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+              <path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/>
+            </svg>
+          </button>
+
+          <!-- Play / Pause -->
+          <button class="player-btn-main" id="btnPlayPause" title="Play / Pause (Space)" aria-label="Play">
+            <!-- Play icon -->
+            <svg class="icon-play" viewBox="0 0 24 24" width="22" height="22" fill="#000000">
+              <path d="M8 5v14l11-7z"/>
+            </svg>
+            <!-- Pause icon -->
+            <svg class="icon-pause hidden" viewBox="0 0 24 24" width="22" height="22" fill="#000000">
+              <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>
+            </svg>
+          </button>
+
+          <!-- Next -->
+          <button class="player-btn control-skip" id="btnNext" title="Next Song" aria-label="Next">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+              <path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/>
+            </svg>
+          </button>
+
+          <!-- Repeat -->
+          <button class="player-btn control-secondary" id="btnRepeat" title="Repeat (Off / All / One)" aria-label="Repeat">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" class="repeat-icon">
+              <path d="M7 7h10v3l4-4-4-4v3H5v6h2V7zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2v4z"/>
+            </svg>
+            <span class="repeat-badge hidden" id="repeatBadge">1</span>
+            <span class="control-indicator-dot"></span>
+          </button>
+        </div>
+
+        <!-- Progress scrubber -->
+        <div class="player-progress-row">
+          <span class="time-label" id="timeCurrent">0:00</span>
+          <div class="slider-wrapper">
+            <input type="range" class="custom-slider" id="seekBar" min="0" max="100" value="0" step="0.1" aria-label="Seek track">
+            <div class="slider-fill" id="seekFill"></div>
+          </div>
+          <span class="time-label" id="timeTotal">0:00</span>
+        </div>
+      </div>
+
+      <!-- Right: Utility Controls (Queue, Volume) -->
+      <div class="player-utility-container">
+        <!-- Equalizer animation indicator (shows when playing) -->
+        <div class="equalizer-bars hidden" id="playerEqualizer">
+          <span class="bar bar1"></span>
+          <span class="bar bar2"></span>
+          <span class="bar bar3"></span>
+          <span class="bar bar4"></span>
+        </div>
+
+        <button class="player-btn control-util" id="btnToggleQueue" title="Queue" aria-label="Play Queue">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
+            <path d="M15 6H3v2h12V6zm0 4H3v2h12v-2zM3 16h8v-2H3v2zM17 6v8.18c-.31-.11-.65-.18-1-.18-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3V8h3V6h-5z"/>
+          </svg>
+        </button>
+
+        <div class="volume-control-box">
+          <button class="player-btn control-util" id="btnMute" title="Mute" aria-label="Mute toggle">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" id="volIcon">
+              <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>
+            </svg>
+          </button>
+          <div class="volume-slider-wrapper">
+            <input type="range" class="custom-slider volume-slider" id="volumeSlider" min="0" max="1" step="0.01" value="0.8" aria-label="Volume">
+            <div class="slider-fill volume-fill" id="volumeFill" style="width: 80%;"></div>
+          </div>
+        </div>
+      </div>
+    </footer>
+
+    <!-- MOBILE MINI PLAYER (Floats above mobile bottom nav) -->
+    <div class="mobile-mini-player hidden" id="mobileMiniPlayer">
+      <div class="mini-player-progress-line" id="miniPlayerProgressLine"></div>
+      <div class="mini-player-content" id="miniPlayerClickArea">
+        <div class="mini-player-art" id="miniPlayerArt">
+          <div class="art-fallback-mini">🎵</div>
+          <img src="" alt="" id="miniPlayerImg" class="hidden">
+        </div>
+        <div class="mini-player-meta">
+          <div class="mini-title" id="miniTrackTitle">No song playing</div>
+          <div class="mini-artist" id="miniTrackArtist">Tap to open</div>
+        </div>
+      </div>
+      <div class="mini-player-actions">
+        <button class="mini-action-btn" id="miniBtnLike" aria-label="Like song">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+          </svg>
+        </button>
+        <button class="mini-action-btn" id="miniBtnPlayPause" aria-label="Play/Pause">
+          <svg class="mini-icon-play" viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
+            <path d="M8 5v14l11-7z"/>
+          </svg>
+          <svg class="mini-icon-pause hidden" viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
+            <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- MOBILE BOTTOM NAVIGATION BAR -->
+    <nav class="mobile-bottom-nav" id="mobileBottomNav">
+      <button class="mobile-nav-item active" data-view="home">
+        <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
+          <path d="M12.5 3.247a1 1 0 0 0-1 0L4 7.577V20h5v-6a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v6h5V7.577l-7.5-4.33z"/>
+        </svg>
+        <span>Home</span>
+      </button>
+
+      <button class="mobile-nav-item" data-view="search">
+        <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
+          <path d="M10.5 3a7.5 7.5 0 0 1 5.645 12.438l4.709 4.708a1 1 0 0 1-1.414 1.415l-4.708-4.709A7.5 7.5 0 1 1 10.5 3zm0 2a5.5 5.5 0 1 0 0 11 5.5 5.5 0 0 0 0-11z"/>
+        </svg>
+        <span>Search</span>
+      </button>
+
+      <button class="mobile-nav-item" data-view="library">
+        <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
+          <path d="M3 22a1 1 0 0 1-1-1V3a1 1 0 0 1 2 0v18a1 1 0 0 1-1 1zM15.5 2.134A1 1 0 0 0 14 3v18a1 1 0 0 0 1.5.866l6-3.464A1 1 0 0 0 22 17.536V4.464a1 1 0 0 0-.5-.866l-6-3.464zM8 3a1 1 0 0 0-1 1v16a1 1 0 0 0 2 0V4a1 1 0 0 0-1-1z"/>
+        </svg>
+        <span>Your Library</span>
+      </button>
+    </nav>
+
+    <!-- MOBILE FULL-SCREEN NOW-PLAYING MODAL -->
+    <div class="mobile-now-playing-modal" id="mobileNowPlayingModal">
+      <div class="mobile-modal-header">
+        <button class="modal-header-btn" id="btnCollapseMobileModal" aria-label="Minimize">
+          <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor">
+            <path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6 1.41-1.41z"/>
+          </svg>
+        </button>
+        <div class="modal-header-title">
+          <span class="subtext">PLAYING FROM</span>
+          <span class="source-name" id="mobilePlayingSource">Google Drive</span>
+        </div>
+        <button class="modal-header-btn" id="btnMobileQueueToggle" aria-label="Queue">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor">
+            <path d="M15 6H3v2h12V6zm0 4H3v2h12v-2zM3 16h8v-2H3v2zM17 6v8.18c-.31-.11-.65-.18-1-.18-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3V8h3V6h-5z"/>
+          </svg>
+        </button>
+      </div>
+
+      <div class="mobile-modal-body">
+        <div class="mobile-hero-artwork-wrap">
+          <div class="mobile-hero-artwork" id="mobileHeroArt">
+            <div class="art-fallback-large">
+              <svg viewBox="0 0 24 24" width="80" height="80" fill="currentColor">
+                <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/>
+              </svg>
+            </div>
+            <img src="" alt="Album Art" id="mobileHeroImg" class="hidden">
+          </div>
+        </div>
+
+        <div class="mobile-track-details">
+          <div class="mobile-title-wrap">
+            <h2 id="mobileModalTitle">No song playing</h2>
+            <p id="mobileModalArtist">Select a track from your library</p>
+          </div>
+          <button class="btn-track-like mobile-like-btn" id="mobileModalBtnLike" aria-label="Like song">
+            <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+            </svg>
+          </button>
+        </div>
+
+        <!-- Scrubber -->
+        <div class="mobile-scrubber-wrap">
+          <div class="slider-wrapper">
+            <input type="range" class="custom-slider" id="mobileSeekBar" min="0" max="100" value="0" step="0.1" aria-label="Seek track">
+            <div class="slider-fill" id="mobileSeekFill"></div>
+          </div>
+          <div class="mobile-time-row">
+            <span id="mobileTimeCurrent">0:00</span>
+            <span id="mobileTimeTotal">0:00</span>
+          </div>
+        </div>
+
+        <!-- Full mobile controls -->
+        <div class="mobile-controls-row">
+          <button class="mobile-ctrl-btn" id="mobileBtnShuffle" aria-label="Shuffle">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor">
+              <path d="M10.59 9.17L5.41 4 4 5.41l5.17 5.17 1.42-1.41zM14.5 4l2.04 2.04L4 18.59 5.41 20 17.96 7.46 20 9.5V4h-5.5zm.33 9.41l-1.41 1.41 3.13 3.13L14.5 20H20v-5.5l-2.04 2.04-3.13-3.13z"/>
+            </svg>
+          </button>
+          <button class="mobile-ctrl-btn" id="mobileBtnPrev" aria-label="Previous">
+            <svg viewBox="0 0 24 24" width="28" height="28" fill="currentColor">
+              <path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/>
+            </svg>
+          </button>
+          <button class="mobile-play-btn-large" id="mobileBtnPlayPause" aria-label="Play/Pause">
+            <svg class="icon-play" viewBox="0 0 24 24" width="30" height="30" fill="#000000">
+              <path d="M8 5v14l11-7z"/>
+            </svg>
+            <svg class="icon-pause hidden" viewBox="0 0 24 24" width="30" height="30" fill="#000000">
+              <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>
+            </svg>
+          </button>
+          <button class="mobile-ctrl-btn" id="mobileBtnNext" aria-label="Next">
+            <svg viewBox="0 0 24 24" width="28" height="28" fill="currentColor">
+              <path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/>
+            </svg>
+          </button>
+          <button class="mobile-ctrl-btn" id="mobileBtnRepeat" aria-label="Repeat">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor">
+              <path d="M7 7h10v3l4-4-4-4v3H5v6h2V7zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2v4z"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- SETTINGS & FOLDER MODAL -->
+    <div class="modal-backdrop hidden" id="settingsModal">
+      <div class="modal-card">
+        <div class="modal-header">
+          <h3>Google Drive Settings</h3>
+          <button class="modal-close-btn" id="btnCloseSettings">✕</button>
+        </div>
+        <div class="modal-body">
+          <p class="modal-hint">Paste your Google Drive music folder link or folder ID. Musify scans this folder and subfolders for audio files.</p>
+          
+          <div class="form-group">
+            <label for="inputFolderLink">Drive Folder Link or Folder ID:</label>
+            <input type="text" id="inputFolderLink" placeholder="https://drive.google.com/drive/folders/1ABC..." spellcheck="false">
+          </div>
+
+          <div class="form-group">
+            <label for="inputClientId">OAuth Client ID (from Google Cloud):</label>
+            <input type="text" id="inputClientId" placeholder="123456789-abcdefg.apps.googleusercontent.com" spellcheck="false">
+            <span class="input-note">Never enters your password or client secret. Stored locally in your browser.</span>
+          </div>
+
+          <div class="modal-sync-info">
+            <div class="sync-status-row">
+              <span>Sync status:</span>
+              <strong id="syncStatusText">Ready</strong>
+            </div>
+            <div class="sync-status-row">
+              <span>Total audio tracks cached:</span>
+              <strong id="syncTracksCount">0 songs</strong>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn-secondary" id="btnSyncNow">🔄 Re-scan Folder Now</button>
+          <button class="btn-primary" id="btnSaveSettings">Save & Connect</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- CREATE / RENAME PLAYLIST MODAL -->
+    <div class="modal-backdrop hidden" id="playlistModal">
+      <div class="modal-card small-modal">
+        <div class="modal-header">
+          <h3 id="playlistModalTitle">Create Playlist</h3>
+          <button class="modal-close-btn" id="btnClosePlaylistModal">✕</button>
+        </div>
+        <div class="modal-body">
+          <div class="form-group">
+            <label for="inputPlaylistName">Playlist name</label>
+            <input type="text" id="inputPlaylistName" placeholder="My Awesome Mix" maxlength="50" autocomplete="off">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn-secondary" id="btnCancelPlaylist">Cancel</button>
+          <button class="btn-primary" id="btnConfirmPlaylist">Create</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- TRACK CONTEXT MENU -->
+    <div class="context-menu hidden" id="trackContextMenu">
+      <button class="context-menu-item" id="ctxPlayNext">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/></svg>
+        <span>Play next</span>
+      </button>
+      <button class="context-menu-item" id="ctxAddToQueue">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M15 6H3v2h12V6zm0 4H3v2h12v-2zM3 16h8v-2H3v2zM17 6v8.18c-.31-.11-.65-.18-1-.18-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3V8h3V6h-5z"/></svg>
+        <span>Add to queue</span>
+      </button>
+      <div class="context-menu-divider"></div>
+      <button class="context-menu-item" id="ctxAddToPlaylist">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M14 10H2v2h12v-2zm0-4H2v2h12V6zm4 8v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zM2 16h8v-2H2v2z"/></svg>
+        <span>Add to playlist...</span>
+      </button>
+      <button class="context-menu-item hidden" id="ctxRemoveFromPlaylist">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
+        <span>Remove from this playlist</span>
+      </button>
+      <div class="context-menu-divider"></div>
+      <button class="context-menu-item" id="ctxToggleLike">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+        <span id="ctxLikeLabel">Save to your Liked Songs</span>
+      </button>
+    </div>
+
+    <!-- ADD TO PLAYLIST PICKER MODAL -->
+    <div class="modal-backdrop hidden" id="addToPlaylistModal">
+      <div class="modal-card small-modal">
+        <div class="modal-header">
+          <h3>Add to Playlist</h3>
+          <button class="modal-close-btn" id="btnCloseAddToPlaylist">✕</button>
+        </div>
+        <div class="modal-body">
+          <p class="modal-hint" id="addToPlaylistSongLabel">Select a playlist:</p>
+          <div class="playlist-picker-list" id="playlistPickerList">
+            <!-- Dynamically populated playlists -->
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn-secondary" id="btnPickerNewPlaylist">+ New Playlist</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- TOAST NOTIFICATION CONTAINER -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <!-- HIDDEN AUDIO ENGINE ELEMENT -->
+    <audio id="audioPlayer" preload="auto"></audio>
+  </div>
+
+  <!-- Google Identity Services (GIS) client library for Drive OAuth popup -->
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  
+  <!-- Config, Services & App Entry (ES Modules) -->
+  <script type="module" src="config.js"></script>
+  <script type="module" src="library.js"></script>
+  <script type="module" src="drive.js"></script>
+  <script type="module" src="app.js"></script>
+</body>
+</html>
